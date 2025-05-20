@@ -1,0 +1,54 @@
+name: searxng
+
+services:
+  search-ts:
+    image: tailscale/tailscale
+    container_name: search-ts
+    cap_add:
+      - net_admin
+    volumes:
+      - ${PWD}/state:/var/lib/tailscale
+      - ${PWD}/config:/config
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    environment:
+      - TS_AUTHKEY=${TS_AUTHKEY}
+      - TS_EXTRA_ARGS=--advertise-tags=tag:container --reset
+      - TS_STATE_DIR=/var/lib/tailscale
+      - TS_SERVE_CONFIG=/config/serveconfig.json
+      - TS_USERSPACE=false
+    hostname: search
+    restart: unless-stopped
+
+  redis:
+    container_name: redis
+    image: docker.io/valkey/valkey:8-alpine
+    command: valkey-server --save 30 1 --loglevel warning
+    restart: unless-stopped
+    volumes:
+      - valkey-data2:/data
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "1m"
+        max-file: "1"
+
+  searxng:
+    container_name: searxng
+    image: docker.io/searxng/searxng:latest
+    restart: unless-stopped
+    network_mode: "service:search-ts"
+    volumes:
+      - ./searxng:/etc/searxng:rw
+    environment:
+      - SEARXNG_BASE_URL=https://${SEARXNG_HOSTNAME:-localhost}/
+      - UWSGI_WORKERS=${SEARXNG_UWSGI_WORKERS:-4}
+      - UWSGI_THREADS=${SEARXNG_UWSGI_THREADS:-4}
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "1m"
+        max-file: "1"
+
+volumes:
+  valkey-data2:

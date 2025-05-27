@@ -57,7 +57,7 @@ services:
       - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
       - MYSQL_USER=${OWNCLOUD_DB_USERNAME}
       - MYSQL_PASSWORD=${OWNCLOUD_DB_PASSWORD}
-      - MYSQL_DATABASE=${OWNCLOUD_DB_HOST}
+      - MYSQL_DATABASE=${OWNCLOUD_DB_NAME}
       - MARIADB_AUTO_UPGRADE=1
     command: ["--max-allowed-packet=128M", "--innodb-log-file-size=64M"]
     healthcheck:
